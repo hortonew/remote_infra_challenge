@@ -34,3 +34,8 @@ Framework recommendation: Actix Web
 - Web Framework: Actix Web
 
 Rust was chosen for the simplicity in creating an artifact that can be run on the remote system without the need for external virtual environments and making sure the correct virtual environment is activated.
+
+## Challenges
+
+1. The binary needs to compile for the x86_64-unknown-linux-musl target since this version of Ubuntu uses GLIBC_2.32 - GLIBC_2.34 and the Github action image uses a newer one.
+2. The capabilities on the binary need to be able to bind to ports under 1024
