@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'apps/web_app/**' 
+      - 'apps/web_app/**'
   workflow_dispatch:
 
 jobs:
@@ -15,6 +15,22 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache Cargo build
+        uses: actions/cache@v4
+        with:
+          path: apps/web_app/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
