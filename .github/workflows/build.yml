@@ -1,0 +1,33 @@
+name: Build Web App Artifact
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/web_app/**' 
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Build the project
+        run: cargo build --release
+        working-directory: apps/web_app
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web_app
+          path: apps/web_app/target/release/web_app
