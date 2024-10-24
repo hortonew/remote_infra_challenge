@@ -59,3 +59,27 @@ sudo systemctl daemon-reload
 sudo systemctl enable web-app
 sudo systemctl start web-app
 ```
+
+## Load Balancer
+
+Details from: https://www.haproxy.com/blog/enable-sticky-sessions-in-haproxy
+
+### Deploy
+
+```sh
+# 35.160.186.182
+sudo apt-get update
+sudo apt-get install -y haproxy
+```
+
+edit /etc/haproxy/haproxy.cfg with [configs/haproxy/haproxy.cfg](configs/haproxy/haproxy.cfg)
+
+```sh
+# validate it's correct
+sudo haproxy -c -f /etc/haproxy/haproxy.cfg
+# You should see: Configuration file is valid
+
+# restart
+sudo systemctl restart haproxy
+```
+
