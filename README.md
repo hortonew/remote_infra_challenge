@@ -83,3 +83,96 @@ sudo haproxy -c -f /etc/haproxy/haproxy.cfg
 sudo systemctl restart haproxy
 ```
 
+## Monitoring (nagios)
+
+```sh
+sudo apt update
+sudo apt install -y apache2 libapache2-mod-php php wget unzip autoconf gcc make libgd-dev libmcrypt-dev libssl-dev build-essential
+
+sudo useradd nagios
+sudo groupadd nagcmd
+sudo usermod -aG nagcmd nagios
+sudo usermod -aG nagcmd www-data
+
+cd /tmp
+wget https://assets.nagios.com/downloads/nagioscore/releases/nagios-4.5.3.tar.gz
+tar -zxvf nagios-4.5.3.tar.gz
+cd nagios-4.5.3
+
+sudo ./configure --with-command-group=nagcmd
+sudo make all
+sudo make install
+sudo make install-init
+sudo make install-config
+sudo make install-commandmode
+sudo make install-webconf
+sudo make install-cgis
+
+# plugins
+cd /tmp
+wget https://nagios-plugins.org/download/nagios-plugins-2.4.10.tar.gz
+tar -zxvf nagios-plugins-2.4.10.tar.gz
+cd nagios-plugins-2.4.10
+sudo ./configure --with-nagios-user=nagios --with-nagios-group=nagios
+sudo make
+sudo make install
+sudo htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin # configure with password.  You will use nagiosadmin / <this password> to log into nagios.
+
+# services
+sudo systemctl start nagios
+sudo systemctl enable nagios
+sudo systemctl enable apache2
+sudo systemctl start apache2
+```
+
+edit /usr/local/nagios/etc/servers.cfg, apply what's in [configs/nagios/servers.cfg](configs/nagios/servers.cfg)
+
+edit /usr/local/nagios/etc/nagios.cfg, add:
+
+```
+cfg_file=/usr/local/nagios/etc/servers.cfg
+```
+
+and change `interval_length=60` to `interval_length=1`
+
+Restart nagios
+
+```sh
+sudo systemctl restart nagios
+```
+
+Configure apache2 virtualhost by overwriting /etc/apache2/sites-available/nagios.conf with what's in [configs/nagios/apache/nagios.conf](configs/nagios/apache/nagios.conf).
+
+
+Then reload
+
+```sh
+sudo a2enmod cgi
+sudo a2ensite nagios.conf
+sudo a2enmod cgi rewrite
+sudo systemctl restart apache2
+```
+
+You should be able to get to `http:<ip of nagios server>` and log in with the credentials above (nagiosadmin).
+
+### Custom python checks
+
+Edit: /usr/local/nagios/etc/webservers.txt, placing each web server on a single line.
+
+Edit: /usr/local/nagios/libexec/check_webservers.py, copying in what's in [configs/nagios/check_webservers.py](configs/nagios/check_webservers.py).
+
+Edit: /usr/local/nagios/etc/objects/commands.cfg, adding in:
+
+```
+define command {
+    command_name    check_webservers_python
+    command_line    /usr/bin/python3 /usr/local/nagios/libexec/check_webservers.py
+}
+
+define command {
+    command_name    check_dummy
+    command_line    /usr/local/nagios/libexec/check_dummy $ARG1$
+}
+```
+
+restart nagios: `sudo systemctl restart nagios`

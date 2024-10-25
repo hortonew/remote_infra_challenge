@@ -60,3 +60,4 @@ The load balancer needs to bind to 5000 ports (60000-65000).  ipvs, while native
 
 1. The binary needs to compile for the x86_64-unknown-linux-musl target since this version of Ubuntu uses GLIBC_2.32 - GLIBC_2.34 and the Github action image uses a newer one.
 2. The capabilities on the binary need to be able to bind to ports under 1024
+3. Nagios requires apache in front, and has a lot of steps needed to compile and get set up properly.  Building the custom steps require touching a number of config files.
